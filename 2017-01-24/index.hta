@@ -1,0 +1,2122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <HTA:APPLICATION 
+     ID="objITHelpdesk"
+     APPLICATIONNAME="HTA17"
+	 BORDER="thin"
+	 CONTEXTMENU="yes"
+	 ICON="images/help.ico" 
+	 MAXIMIZEBUTTON="yes"
+     MINIMIZEBUTTON="yes"
+	 RESIZE="no"
+	 SCROLL="yes"
+     SINGLEINSTANCE="no"
+     WINDOWSTATE="maximize" />
+	<!-- vs. "normal" -->
+<script language="vbscript" type="text/vbscript">
+	// see: https://www.tutorialspoint.com/vbscript/index.htm
+	Function NewInstance()
+		Set objShell = CreateObject("WScript.Shell")
+		objShell.Run("index.hta")
+		Set objShell = Nothing
+	End Function
+	
+	Function NewCalculator()
+		// see: https://technet.microsoft.com/en-us/library/ee156605.aspx
+		Set objShell = CreateObject("WScript.Shell")
+		objShell.Run("calc.exe")
+		Set objShell = Nothing
+		// objShell.Run("%comspec% /K dir"), 1, True
+	End Function
+	
+	Function NewHEP()
+		// see: https://technet.microsoft.com/en-us/library/ee156605.aspx
+		Set objShell = CreateObject("WScript.Shell")
+		objShell.Run("hep.docm")
+		Set objShell = Nothing
+		// objShell.Run("%comspec% /K dir"), 1, True
+	End Function
+	
+	Function newEXCEL()
+		Set objShell = CreateObject("WScript.Shell")
+		objShell.Run("../receiver.xlsx")
+		Set objShell = Nothing
+	End Function
+</script>
+
+<link rel="stylesheet" href="hta17.css" />
+<script type = "text/javascript" src="../JSON-js-master/json2.js"></script>
+<script type = "text/javascript" src="cool.js"></script>
+<script type = "text/javascript" src="auto_correct.js"></script>
+<script type = "text/javascript" src="../jquery/jquery-1.7.2.min.js"></script>
+<script type = "text/javascript" src="../jquery/ui/jquery-ui.js"></script>
+<link rel="stylesheet" href="../jquery/ui/jquery-ui.css" />
+
+<link rel="stylesheet" href="../jquery/fancybox/source/jquery.fancybox.css?v=2.1.6" type="text/css" media="screen" />
+<script type="text/javascript" src="../jquery/fancybox/source/jquery.fancybox.pack.js?v=2.1.6"></script>
+
+<script language="JavaScript" type="text/JavaScript">
+	var strGreen = "008000";
+	var objPersonal = {}
+	
+	$.fn.instantiatePatient = function() {
+		fields_by_number = this.find("input");
+		objPersonal["firstname"] = fields_by_number.eq(0).val();
+		objPersonal["lastname"] = fields_by_number.eq(1).val();
+		objPersonal["dos"] = fields_by_number.eq(2).val();
+		objPersonal["dob"] = fields_by_number.eq(3).val();
+		objPersonal["hep"] = {};
+		var strPatient = fields_by_number.eq(0).val() + " " + fields_by_number.eq(1).val();
+		var strDate = fields_by_number.eq(2).val();
+		self.document.title = strPatient + " | " + strDate;
+		$("span#patient_by_name").html(self.document.title);
+		auto_correct["nm"] = strPatient;
+	}
+	
+	$.fn.fancyDetails = function() {
+		// alert( event.type + ": " +  event.which );
+		// see: https://api.jquery.com/event.which/
+		var txtAbbr = this.text();
+		var txtLng = this.data("full");
+		var intNow = Date.now();
+		$("div#myfancybox").find("button").unbind("click").bind("click",function(){
+			$("div[data-uid='"+intNow+"']").trigger("click").trigger("click");
+			$.fancybox.close();
+			return false;
+		});
+		this.attr("data-uid",intNow);
+		
+		$("div#myfancybox input:checkbox").prop('checked',(this.hasClass('cool'))?"checked":"");
+		
+		$("div#myfancybox").find("input:checkbox").each(function() {
+			$(this).unbind("change").bind("change",function(){
+				$("div[data-uid='"+intNow+"']").trigger("click");
+			});
+			// BECAUSE IT IS HARD TO SEE WHEN A CHECKBOX HAS THE FOCUS,
+			// A span AFTER THE CHECKBOX WILL SHOW/HIDE...
+			$(this).next().css({'display':'none'});
+			$(this).on("focus",function(){
+				$(this).next().css({'display':'inline'});
+			});
+			$(this).on("blur",function(){
+				$(this).next().css({'display':'none'});
+			});
+		});
+		$("div#myfancybox").find("textarea").each(function(index) {
+			switch(index) {
+				case 0:
+					$(this).val(txtAbbr);
+					// see: http://api.jquery.com/unbind/
+					$(this).unbind( "keyup" );
+					// see: https://api.jquery.com/keyup/
+					$(this).keyup(function(event){
+						if(event.which == 13) {
+							// when user hits [enter], 1) the target div gets a pair of triggered clicks
+							// to update the h3 > span value, and 2) the fancybox closes
+							$("div[data-uid='"+intNow+"']").trigger("click").trigger("click");
+							$.fancybox.close();
+							return false;
+						}
+						$("div[data-uid='"+intNow+"']").text($(this).val());
+					});
+					/*
+					$(this).focus(function() {
+						alert( "Handler for .focus() called." );
+					});
+					*/
+					break;
+				case 1:
+					$(this).val(txtLng);
+					// see: http://api.jquery.com/unbind/
+					$(this).unbind( "keyup" );
+					// see: https://api.jquery.com/keyup/
+					$(this).keyup(function(event){
+						if(event.which == 13) {
+							// when user hits [enter], 1) the target div gets a pair of triggered clicks
+							// to update the h3 > span value, and 2) the fancybox closes
+							$("div[data-uid='"+intNow+"']").trigger("click").trigger("click");
+							$.fancybox.close();
+							return false;
+						}
+						$("div[data-uid='"+intNow+"']").data("full",$(this).val());
+					});
+					break;
+			}
+		});
+		$.fancybox($("div#myfancybox"));
+		$("div#myfancybox textarea:first").focus();
+		return false;
+	}
+
+	$.fn.autoCorrect = function() {
+		// SEE auto_correct.js WHICH CONTAINS > 550 HEP REPLACEMENT TEXTS
+		// AND 350+ MORE NON-HEP REPLACEMENT TEXTS
+		var objTarget = this;
+		$.each(auto_correct, function (strKey, strValue) {
+			// SEARCH THE NODE'S html() FOR strKey (BRACKETED BY 2 WORD BOUNDARIES)
+			// WE DO NEED TO KNOW, SPECIFICALLY, WHAT THE PRECEDING AND TRAILING WORD BOUNDARIES ARE
+			var patt = new RegExp("(\\b)" + strKey + "(\\s)");
+			if(patt.test(objTarget.html())) {
+				objTarget.html(objTarget.html().replace(patt,"$1" + strValue + "$2"));
+				return false;
+			}
+		});
+	}
+
+	$.fn.blurMe = function() {
+		var data_format = this.closest("div[class~='preview']").prev("h3").data("format");
+		this.closest("div[class~='preview']").prev("h3").children("span").last().AssembleString(data_format);
+	}
+
+	$.fn.toggleMe = function(){
+		this.toggleClass("cool"); // THEY ARE EITHER COOL, OR THEY'RE NOT
+		this.parents().prev("h3").css("color", "red");
+		
+		// WE SET EACH h3 NODE COLOR TO GREEN vs. RED BEFORE WE GET TO (RE-)POPULATING
+		// THE FINAL SPAN TAG IN: this.closest("div[class~='preview']").prev("h3")
+		// alert(this.parents("div.section").length);
+		this.parents("div.section").each(function() {
+			var strColor = "red";
+			if($(this).find("div[class~='cool']").length > 0) strColor = strGreen;
+			$(this).prev("h3").css("color",strColor);
+		});
+		// RE: THE TARGET div.section AND ITS PRECEDING h3,
+		// THE TEXT WE WANT TO WRITE WILL GO HERE: .prev("h3").children("span").last()
+		// AND IF WE WANT TO DOUBLE CHECK ITS GOING TO THE RIGHT PLACE/DEBUG, THE LABEL SPAN IS HERE: .last().prev()
+		// var data_format = this.closest("div[class~='preview']").prev("h3").data("format");
+		var data_format = this.closest("div[class~='section']:not('.omit')").prev("h3").data("format");
+		if(!data_format) alert(this.closest("div[class~='section']:not('.omit')").prev("h3").text());
+		// this.closest("div[class~='preview']").prev("h3").children("span").last().AssembleString(data_format);
+		this.closest("div[class~='section']:not('.omit')").prev("h3").children("span").last().AssembleString(data_format);
+		
+		// COLOR THE {F2} BUTTONS RED/GREEN, DEPENDING ON THE PRESENCE OR ABSENCE
+		// OF CLOSE BY (OR DEEPLY NESTED) ".cool" CONTENT DIVS CONTAINING WILDCARD STRINGS (***).
+		var strF2Color = (this.closest("div[class~='preview']").find("div.cool:contains('***')").length > 0) ? "red":strGreen;
+		this.parents("div[class~='preview']").each(function(){
+			var strF2Color = ($(this).find("div.cool:contains('***')").length > 0) ? "red":strGreen;
+			$(this).prev("h3").children("button:contains('{F2}')").css({"color":strF2Color});
+		});
+
+	}
+	
+	$.fn.selectText = function(){
+		this.find('input').each(function() {
+			if($(this).prev().length == 0 || !$(this).prev().hasClass('p_copy')) { 
+				$('<p class="p_copy" style="position: absolute; z-index: -1;"></p>').insertBefore($(this));
+			}
+			$(this).prev().html($(this).val());
+		});
+		var doc = document;
+		var element = this[0];
+		if (doc.body.createTextRange) {
+			var range = document.body.createTextRange();
+			range.moveToElementText(element);
+			range.select();
+		} else if (window.getSelection) {
+			var selection = window.getSelection();        
+			var range = document.createRange();
+			range.selectNodeContents(element);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
+	};
+
+	$.fn.TameString = function() {
+		// see: http://learn.jquery.com/plugins/basic-plugin-creation/
+		var chunks = this.text().split("***");
+		// alert(chunks.join("|"));
+		for(i = 1; i < chunks.length; i = i + 2) {
+			chunks.splice(i, 0, "***"); 
+		}
+		for(i = 0; i < chunks.length; i++) {
+			if(chunks[i] == "***") {
+				chunks[i] = prompt(chunks.slice(0,i).join("") + "[***]" + chunks.slice(i+1,chunks.length).join(""),"***");
+			}
+		}
+		this.text(chunks.join(""));
+		this.trigger("click").trigger("click"); 	// TWO CLICKS TO UPDATE THE h3 > span:last IS RESOURCE INTENSIVE,
+													// BUT GETS THE JOB DONE
+		return false;
+	}
+	$.fn.AssembleString= function(format) {
+		var opener = cool_formats[format].opener;
+		var joiner = cool_formats[format].joiner;
+		var closer = cool_formats[format].closer;
+		if(!opener) opener = "";
+		if(!joiner) joiner = ", ";
+		if(!closer) closer = "";
+		var a = [];
+		var blnOmits = (this.parent("h3").next().find("div.section.omit").length) ? true: false;
+		// if(blnOmits) alert(this.prev().text() + " contains 1+ 'omit' sections: " + blnOmits);
+		var collectedDivs = this.parent("h3").next().find("div[class~='cool']");
+		// var collectedDivs = this.parent("h3").next().children("div[class~='cool']");
+		for ( var i = 0; i < collectedDivs.length; i++ ) {
+			strPush = (collectedDivs.eq(i).attr("data-full")) ? collectedDivs.eq(i).data("full"):collectedDivs.eq(i).text();
+			a.push(strPush); // vs. .innerHTML vs. .text()
+		}
+		this.text(opener + a.join(joiner) + closer);
+		return false;
+	}
+	
+	$(document).ready(function(){
+		
+		// WE HAVE A WHOLE BUNCH OF NESTED ACCORDIONS TO INSTANTIATE. IF THIS PROJECT EVER STARTS TO
+		// OVERWHELM THE BROWSER/APP/ENGINE, IT MAY WELL BE DUE TO THIS FACT.
+		$("div.accordion").accordion({"active": false, "heightStyle": "content", "collapsible": true, "icons": {"header": "ui-icon-plus", "activeHeader": "ui-icon-minus"}});
+		
+		// THE h3 TEXT COLOR DEFAULTS TO RED, THEN WE:
+		// 1) PERFORM A CLICK EVENT ON EACH OF THE MANY div.default NODES, AND
+		// 2) APPLY LOGIC TO TURN SOME/ALL GREEN TO SIGNIFY THERE IS ***SOME*** SELECTED CONTENT FROM THE GET-GO.
+		$('h3').css({color: 'red'});
+		
+		// FROM THIS POINT ON, EVERY ONE OF THE EDITABLE DIVs CAN BE FOUND/FILTERED USING SIMPLY: div.normal
+		$("div.section > div:not('.accordion')").attr("contenteditable","true").addClass("normal floating");
+		
+		/*
+		$("div.section > div.normal").last().each(function(){
+			var newA = $("a").css({'clear':'both'}).html("more...").attr("href","#").on("click",function(){return false;});
+			$(this).after(newA);
+		});
+		*/
+		// after($("a").css({'clear':'both'}).html("more...").attr("href","#").on("click",function(){return false;}));
+		
+		// A COUPLE OF USEFUL BUTTONS ({F2} AND N/A) ARE ADDED/ENABLED, FLOATING LEFT, IN MOST h3 NODES
+		$("div[class~='accordion'] h3").each(function(index) {
+			if($(this).hasClass("omit")) return true;
+			button = $("<button>").html("{F2}");
+			$(this).prepend(button);
+			button.on("click",function(){
+				$(this).parent().next().find("div[class~='cool']:contains('***')").each(function() {
+					$(this).TameString();
+				});
+				return false;
+			}).css({'float':'left','margin-right':'1em'}); // floating buttons inside a h3 are whacky in HTA/IE6
+			
+			button = $("<button>").html("N/A");
+			$(this).prepend(button);
+			button.on("click",function(){
+				$(this).parent().next().find("div[class~='cool']").each(function() {
+					$(this).trigger("click");
+				});
+				return false;
+			}).css({'float':'left','margin-right':'1em'}); // floating buttons inside a h3 is whacky in HTA/IE6
+		});
+
+		$("div.normal") // THERE ARE SEVERAL HUNDRED (IF NOT THOUSANDS) OF THESE
+		  .on("blur",function(){ 
+			$(this).blurMe();
+		}).on("click",function(){
+			$(this).toggleMe();
+		}).on("keyup",function(){
+			$(this).autoCorrect();
+		}).on("contextmenu",function( event ) {
+			$(this).fancyDetails();
+			return false;
+		});
+
+		// COLLAPSE ALL ACCORDIONS THAT ARE IN THE ACTIVE STATE
+		$('a#expand_collapse').on("click",function(e) {
+			$('.accordion .ui-accordion-header.ui-state-active').trigger( "click" );
+			$("a#top").trigger("click");
+			e.preventDefault();			
+			return false;
+		});
+		
+		// SCROLL TO THE TOP OF THE PAGE (AND div#wrapper)
+		$("a#top").on("click",function(e){
+			see: http://api.jquery.com/scrollTop/
+			$(document).scrollTop(0);
+			$("div#wrapper").scrollTop(0);
+			e.preventDefault();
+			return false;
+		});
+		
+		// see: http://stackoverflow.com/a/9976413/5863730
+		// HIGHLIGHT A RANGE OF TEXT SO THAT IT CAN BE COPIED TO THE CLIPBOARD
+		$("a#copy_html").on('click', function(e) {
+			var selector = $(this).data('selector');
+			$(selector).selectText();
+			document.execCommand("copy");
+			$("a#copy_html").selectText();
+			alert("Excellent! Now, paste this output to EXCEL... and then PRISM...");
+			$("a#top").trigger("click");
+			// newEXCEL(); // THE ZIP FILE CONTAINS receiver.xlsx. THERE ARE A FEW ISSUES TO IRON OUT STILL.
+			e.preventDefault();
+			return false;
+		});
+		
+		// HIDE THE NOTE PREVIEW AND SHOW INSTEAD THE ACCORDION EDITOR/COMPOSER
+		$("a#compose").on("click",function(e){
+			$("div#editor").css({display: "block"});
+			$("div#colophon").css({display: "block"});
+			$("div#preview_of_note").css({display: "none"});
+			$("a#top").trigger("click");
+			$(this).css({display: "none"});
+			$('a#expand_collapse').css({display: "inline-block"}).addClass("tools");
+			$("a#preview").css({display: "inline-block"}).addClass("tools");
+			$("a#copy_html").css({display: "none"});
+			e.preventDefault();
+			return false;
+		});
+		
+		// B/C MULTIPLE INSTANCES OF THE HTA CAN BE OPEN AND RUNNING, SIMULTANEOUSLY
+		$("a#new_note").on("click",function(e){
+			NewInstance(); // vbscript
+			e.preventDefault();
+			return false;
+		});
+		
+		$("a#calculator").on("click",function(e){
+			NewCalculator(); // vbscript
+			e.preventDefault();
+			return false;
+		});
+		
+		$("a#hep_in_word").on("click",function(e){
+			var a = [];
+			$("h3 > span:contains('Therapeutic Exercise')").parent().next("div.section").children("div.cool").each(function(){
+				var patt = new RegExp("\(([a-zA-Z]+)-([0-9]+)\)");
+				strMatch = patt.exec($(this).html());
+				if(strMatch) {
+					a.push(strMatch[2] + strMatch[3]);
+				}
+			});
+			objPersonal["hep"] = a;
+			// HTA/IE6 DON'T HAVE THE JSON ENGINE AT THE READY
+			// SEE: http://www.devcurry.com/2010/12/resolve-json-is-undefined-error-in.html
+			strPersonal = JSON.stringify(objPersonal);
+			$("div#hep_json").html("[" + strPersonal + "]");
+			$("div#hep_json").selectText();
+			document.execCommand("copy");
+			// IT IS VERY COOL THAT VBA/WORD CAN ACCESS THE CONTENTS OF THE CLIPBOARD, AS DESCRIBED HERE:
+			// https://msdn.microsoft.com/en-us/library/office/ff194373.aspx
+			// SEE: https://codingislove.com/excel-json/ AND https://github.com/VBA-tools/VBA-JSON/releases
+			// WHERE WE DISCOVERED/DOWNLOADED THE MODULE THAT CAN PARSE THE CLIPBOARD-SAVED JSON STRING
+			NewHEP(); // vbscript
+			e.preventDefault();
+			return false;
+		});
+		
+		$("button#load_patient_OK").on("click",function(e){
+			$(this).closest("form").instantiatePatient();
+			$.fancybox.close();
+			e.preventDefault();
+			return false;
+		});
+		
+		// PURE/CONCISE JQUERY WIZARDRY BUILDS A TABLE AND POPULATES IT WITH TEXT 
+		// FROM THE PENULTIMATE AND THE ULTIMATE <span>S IN EACH RELEVANT h3
+		$("a#preview").on("click",function(e){
+			if($(document).find("div[class~='cool']").length == 0) {
+				alert("First, you'll need to start populating the note!");
+				e.preventDefault();
+				return false;
+			}
+			$(this).css({display: "none"});
+			$('a#expand_collapse').css({display: "none"});
+			$("a#copy_html").css({display: "inline-block"}).addClass("tools");
+			$("a#compose").css({display: "inline-block"}).addClass("tools");
+			
+			$("div#editor").css({display: "none"});
+			$("div#colophon").css({display: "none"});
+			$("div#preview_of_note").css({display: "block"});
+			$("div#preview_of_note").html("");
+			// WE NOW HAVE A BLANK SLATE, IN WHICH TO WRITE THE STORED TEXT IN TABLE FORMAT.
+			// PRISM ***MAY*** BE MORE RECEPTIVE to <table></table> THAN <table><tbody></tbody></table>, BUT
+			// SINCE PRISM IGNORES SETTINGS LIKE font-family, text-decoration, ETC.
+			// (EVEN WHEN SET USING .css({}), WE END UP NEEDING ALWAYS TO PASTE TO EXCEL...THEN PRISM.
+			// WOULD THAT IT WEREN'T SO...
+			$("div#preview_of_note").append($("<table>")); // .append($("<tbody>")));
+			// $("div#preview_of_note table").addClass("bordered_table"); // WE DON'T WANT OR NEED
+			$("div#preview_of_note table").removeClass("bordered_table"); // THE TABLE (CELLS) BORDERED
+
+			$("div#editor h3").each(function(){ // 119 OF THESE (AND COUNTING)
+				// see: http://api.jquery.com/jQuery.each/
+				// We can break the $.each() loop at a particular iteration by making the callback function return false. 
+				// Returning non-false is the same as a continue statement in a for loop
+				// (it will skip immediately to the next iteration)
+				var txtContent = "";
+				var blnSOAP = ($(this).hasClass('soap')) ? true: false;
+				var blnNineCats = ($(this).hasClass('ninecats')) ? true: false;
+				if(!blnSOAP) { // OMIT DISPLAYING ANY h3 NODES THAT ARE .omit OR WHOSE FINAL span is EMPTY
+					if($(this).hasClass("omit")) return true;
+					txtContent = $(this).children("span").last().text();
+					if(txtContent == "" && !blnNineCats) return true;
+				}
+				// THE h3 IS EITHER soap ***OR*** IT IS NOT .omit ***AND*** IT HAS CONTENT TO DISPLAY IN ITS FINAL span
+				var jsonLabelCSS = {
+					"font-family":"arial",
+					"vertical-align":"top",
+					"text-align":(blnSOAP) ? "left":"right",
+					"text-decoration":(blnNineCats) ? "underline":"none",
+					"font-weight":(blnSOAP) ? "bold":"normal"
+				}
+				var jsonContentCSS = {
+					"font-family":"arial",
+					"vertical-align":"top",
+					"color":(!txtContent && !blnSOAP)? "#ffffff":"#000000"
+				}
+				if(!txtContent && !blnSOAP) txtContent = ".";
+				txtLabel = $(this).children("span").last().prev().text();
+				objLabel = $("<td>").css(jsonLabelCSS).text(txtLabel);
+				objContent = $("<td>").css(jsonContentCSS).text(txtContent);
+				txtContent = $(this).children("span").last().text();
+				$("div#preview_of_note table").append($("<tr>").append(objLabel).append(objContent));
+			});
+			$("a#copy_html").trigger("click");
+			$("a#top").trigger("click");
+			e.preventDefault();
+			return false;
+		});
+		
+		// NOW THAT WE KNOW HOW TO RESPOND TO A CLICK EVENT ON ONE OF THE SCORES OF 'RESPONSE' DIVS,
+		// TRIGGER A CLICK EVENT ON THE ONES WE IDENTIFY AS DEFAULTS
+		$("div.default").each(function(){
+			$(this).trigger("click");
+		});
+		
+		// THIS IS SWEET. WE'LL SEE THE PATIENT/ENCOUNTER SIMPLY HOVERING OVER THE TASK BAR ICON!
+		// self.document.title = prompt("Patient Name and Encounter Date?","TS");
+		// $("span#patient_by_name").html(self.document.title);
+		
+		$("div#load_patient label").each(function() {
+			$(this).css({"font-weight":"bold"});
+			$(this).parent().css({"text-align": "right"});
+		});
+
+		$.fancybox($("div#load_patient"));
+		$("div#load_patient").find("input").first().focus();
+		
+		// ALL ACCORDIONS ARE FULLY COLLAPSED, ON STARTUP
+		// BY VIRTUE OF THE SETTING: {"active":false}
+		// $('a#expand_collapse').trigger("click"); 
+		
+		// SADLY, THE HTA/IE6 CSS RULES ARE NOT BEEFY ENOUGH TO UNDERSTAND span:last
+		// SO WITH jQuery WE LOCATE THE LAST span AND THEN STYLE THE span AHEAD OF IT
+		$("div#editor h3.ninecats").each(function(){ 
+			$(this).children("span").last().prev().css({'text-decoration':'underline'});
+		});
+		
+		$("div.section").on("contextmenu",function( event ) {
+			if(confirm("Add a wildcard (***) <div>???")) {
+				$(this).append(
+					// HAVING FAILED TO INSTANTIATE THESE DIVs USING THE delegate() FUNCTION,
+					// THE NEXT BEST THING IS TO ENCAPSULATE EACH OF THE EVENT-HANDLERS IN $.fn... SO THAT 
+					// ANY NEWLY CREATED DIV CAN BE ENABLED ON THE FLY W/ .on(), .on(), etc.
+					$("<div>")
+						.html("***")
+						.addClass("normal floating")
+						.on("click",function(){$(this).toggleMe();})
+						.on("blur",function(){$(this).blurMe();})
+						.on("contextmenu",function( event ) {$(this).fancyDetails();return false;})
+						.on("keyup",function(){$(this).autoCorrect();})
+						.attr("contenteditable","true")
+				);
+			}
+			event.stopPropagation();
+			return false;
+		});
+		
+		// SHOW/HIDE LINKS AND DIVS, INTUITIVELY, ON STARTUP
+		$("a#compose").css({display: "none"});
+		$("a#copy_html").css({display: "none"});
+		$("div#editor").css({'display':'block'});
+		$("div#please_wait").css({'display':'none'});
+		
+		var today = new Date().getYear(); // NO NEED TO ADD 1900 IN HTA/IE6
+		today += "-";
+		m = new Date().getMonth()+1;
+		today += (m < 10) ? ("0" + m) : m;
+		today += "-";
+		d = new Date().getDate();
+		today += (d < 10) ? ("0" + d) : d;
+		$("input#load_patient_date").val(today);
+		$("input#load_patient_referral_date").val(today);
+  	});
+
+</script>
+
+
+<title>Quick Eval HTA 2017</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body>
+<div class = "fired_up"> Fired up! </div>
+<div id = "tools">
+	<a id = "expand_collapse" href = "#">Collapse All</a>
+	<a id = "copy_html" href = "#" data-selector="#preview_of_note">Copy</a> 
+	<a id = "top" href = "#">Top</a>
+	<a id = "compose" href = "#">Resume Editing</a>
+	<a id = "preview" href = "#">Preview Note</a>
+	<a id = "new_note" href = "#">New Note</a>
+	<a id = "calculator" href = "#">Calculator</a>
+	<a id = "hep_in_word" href = "#">HEP in WORD</a>
+	<!--<a id = "function_mapDOM" href = "#">mapDOM</a>-->
+  <span id = "patient_by_name" style = "font-weight: bold; float:right; margin-right: 3em;"></span> 
+  <!--<a id = "bullets" href = "#">Bullets</a>-->
+</div>
+<div id = "wrapper"> 
+  <div id = "editor"> 
+    <div class = "accordion">
+      <h3 class = "preview soap"><span class = "bold soap">Subjective:</span><span></span></h3>
+      <div class = "section preview"> 
+        <div class = "accordion"> 
+          <h3 class = "preview" data-format = "sentences"> <span>The patient states: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <!--
+            <input type = "text" value = "INPUT hurts" />
+            <textarea>TEXTAREA hurts</textarea>
+            -->
+            <div>It hurts ***</div>
+            <div>I don't know how it started</div>
+            <div>I have a high threshold for pain</div>
+            <div>The more I walk the worse it gets</div>
+            <div>The more active I am, the worse it gets</div>
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"> <span class = "ninecats">Pain: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>no pain reported</div>
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "simple list"> <span>Location: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>right</div>
+                <div>right greater than left</div>
+                <div>left</div>
+                <div>left greater than right</div>
+                <div>right and left</div>
+                <div>head</div>
+                <div>neck</div>
+                <div>upper back</div>
+                <div>clavicle</div>
+                <div>periscapular area</div>
+                <div>shoulder</div>
+                <div>chest</div>
+                <div>ribs</div>
+                <div>mid-back</div>
+                <div>low back</div>
+                <div>flank</div>
+                <div>abdomen</div>
+                <div>upper arm</div>
+                <div>elbow</div>
+                <div>forearm</div>
+                <div>wrist</div>
+                <div>thumb</div>
+                <div>*** finger</div>
+                <div>*** fingers</div>
+                <div>hand</div>
+                <div>hip</div>
+                <div>groin</div>
+                <div>thigh</div>
+                <div>knee</div>
+                <div>shin</div>
+                <div>calf</div>
+                <div>achilles tendon</div>
+                <div>ankle</div>
+                <div>foot</div>
+                <div>heel</div>
+                <div>instep</div>
+                <div>toe</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "severity list"> <span>Severity 
+                (at present): </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>0</div>
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+                <div>6</div>
+                <div>7</div>
+                <div>8</div>
+                <div>9</div>
+                <div>10</div>
+                <div>10+</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "severity list"> <span>Severity 
+                (at best): </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>0</div>
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+                <div>6</div>
+                <div>7</div>
+                <div>8</div>
+                <div>9</div>
+                <div>10</div>
+                <div>10+</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "severity list"> <span>Severity 
+                (at worst): </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>0</div>
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+                <div>6</div>
+                <div>7</div>
+                <div>8</div>
+                <div>9</div>
+                <div>10</div>
+                <div>10+</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Frequency: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>constant</div>
+                <div>intermittent</div>
+                <div>rare</div>
+                <div>variable</div>
+                <div>worse in the morning</div>
+                <div>worse late in the day</div>
+                <div>worse at night</div>
+                <div>worse as the day goes on</div>
+                <div>worse as the day goes on</div>
+                <div>depending on activity level</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Quality: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>dull</div>
+                <div>aching</div>
+                <div>pinching</div>
+                <div>throbbing</div>
+                <div>pulsing</div>
+                <div>hot or burning</div>
+                <div>sharp</div>
+                <div>stabbing</div>
+                <div>like being stabbed with a knife</div>
+                <div>tingly</div>
+                <div>uncomfortable</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Alleviating 
+                factors: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>rest</div>
+                <div>days off from work</div>
+                <div>NSAIDS</div>
+                <div>keeping moving</div>
+                <div>heat</div>
+                <div>massage</div>
+                <div>icing</div>
+                <div>stretching</div>
+                <div>sitting</div>
+                <div>lying down</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Aggravating 
+                factors: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>moving in bed</div>
+                <div>walking</div>
+                <div>getting in/out of the car</div>
+                <div>sitting</div>
+                <div>running</div>
+                <div>driving</div>
+                <div>standing</div>
+                <div>hopping</div>
+                <div>child care</div>
+                <div>squatting</div>
+                <div>climbing stairs</div>
+                <div>adult caregiving</div>
+                <div>lying on my back</div>
+                <div>descending stairs</div>
+                <div>work</div>
+                <div>lying on my side (***)</div>
+                <div>socializing</div>
+                <div>sleeping</div>
+                <div>dressing</div>
+                <div>intimacy</div>
+                <div>getting out of bed</div>
+                <div>using the toilet</div>
+                <div>recreation (***)</div>
+                <div>getting out of a chair</div>
+                <div>household chores</div>
+                <div>lifting ***</div>
+                <div>ramps</div>
+                <div>carrying ***</div>
+                <div>reading</div>
+                <div>gardening</div>
+                <div>putting weight on it</div>
+                <div>driving with weight on heel</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview" data-format = "simple list"> <span>Having difficulty 
+            with: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "accordion"> 
+              <h3 class = "omit"> <span>Interview</span><span></span></h3>
+              <div class = "section"> 
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "omit"> <span>Intake</span><span></span></h3>
+              <div class = "section omit"> 
+                <div>moving in bed</div>
+                <div>sitting</div>
+                <div>getting out of a chair</div>
+                <div>walking on flat surfaces</div>
+                <div>walking on uneven ground</div>
+                <div>going up and down stairs</div>
+                <div>going up or down ramps</div>
+                <div>bathing</div>
+                <div>dressing</div>
+                <div>eating</div>
+                <div>using the toilet</div>
+                <div>household chores</div>
+                <div>shopping</div>
+                <div>driving</div>
+                <div>caring for children</div>
+                <div>caring for another</div>
+                <div>work activities</div>
+                <div>recreation or play activities</div>
+              </div>
+              <h3 class = "omit"> <span>LEFS</span><span></span></h3>
+              <div class = "section omit"> 
+                <div>any usual work, housework, or school activities</div>
+                <div>usual hobbies, recreational, or sporting activities</div>
+                <div>getting into or out of the bath</div>
+                <div>walking between rooms</div>
+                <div>putting on shoes/socks</div>
+                <div>squatting</div>
+                <div>lifting a shopping bag e.g. from the floor</div>
+                <div>performing light activities around home</div>
+                <div>performing heavy activities around home</div>
+                <div>getting in/out of the car</div>
+                <div>walking two blocks</div>
+                <div>walking a mile</div>
+                <div>going up/down ten stairs</div>
+                <div>sitting for one hour</div>
+                <div>standing for one hour</div>
+                <div>running on even ground</div>
+                <div>running on uneven ground</div>
+                <div>making sharp turns while running fast</div>
+                <div>hopping</div>
+                <div>rolling over in bed</div>
+              </div>
+              <h3 class = "omit"> <span>Modified Low Back Pain Questionnaire</span><span></span> 
+              </h3>
+              <div class = "section omit"> 
+                <div>personal care (washing/dressing/etc)</div>
+                <div>lifting</div>
+                <div>walking</div>
+                <div>sitting</div>
+                <div>standing</div>
+                <div>sleeping</div>
+                <div>sex life</div>
+                <div>social life</div>
+                <div>travel</div>
+              </div>
+              <h3 class = "omit"> <span>Neck Disability Index</span><span></span> 
+              </h3>
+              <div class = "section omit"> 
+                <div>personal care (washing/dressing/etc)</div>
+                <div>lifting</div>
+                <div>reading</div>
+                <div>headaches</div>
+                <div>concentration</div>
+                <div>work</div>
+                <div>driving</div>
+                <div>sleeping</div>
+                <div>recreation</div>
+              </div>
+              <h3 class = "omit"> <span>Quick DASH</span><span></span></h3>
+              <div class = "section omit"> 
+                <div>opening a tight/new jar</div>
+                <div>doing heavy household chores (wash walls/floors/etc)</div>
+                <div>carrying a shopping bag or briefcase</div>
+                <div>washing the back</div>
+                <div>using a knife to cut food</div>
+                <div>recreational activities where arms/shoulders are used</div>
+                <div>socializing with family/friends/groups/etc</div>
+                <div>working or engaging in other regular weekly activities</div>
+                <div>sleeping</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span class = "ninecats">Patient's 
+            goals for treatment: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">pain relief</div>
+            <div class = "default">full functioning</div>
+            <div>sleep through the night in comfort</div>
+            <div>wake in comfort</div>
+            <div class = "default">learn techniques/strategies to better manage 
+              the problem</div>
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class = "accordion"> 
+      <h3 class = "preview soap"><span class = "bold soap">Objective:</span><span></span></h3>
+      <div class = "section preview"> 
+        <div class = "accordion"> 
+          <h3 class = "preview ninecats" data-format = "run on list"> <span class = "ninecats">Patient 
+            Profile: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">M*** is a</div>
+            <div class = "default">*** year old</div>
+            <div class = "default">from ***</div>
+            <div class = "default">referred to PT by *** on ***</div>
+            <div>self-referred to PT</div>
+            <div class = "default">for ***.</div>
+            <div class = "default">***.</div>
+            <div>***.</div>
+            <div>***.</div>
+            <div>***.</div>
+            <div>***.</div>
+            <div>***.</div>
+          </div>
+          <h3 class = "preview" data-format = "sentences"> <span>Mechanism of 
+            Injury: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "sentences"> <span>Associated Symptoms: 
+            </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "sentences"> <span>Home Environment: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>one story house</div>
+            <div>2(+) story house</div>
+            <div>downstairs apartment or condo</div>
+            <div>upstairs apartment or condo</div>
+            <div>2 story apartment or condo</div>
+            <div>independent living establishment</div>
+            <div>assisted living establishment</div>
+            <div>group home</div>
+            <div>nursing home</div>
+            <div>dormitory</div>
+            <div>temporary shelter</div>
+            <div>correctional facility</div>
+            <div>living in car</div>
+            <div>homeless</div>
+            <div>with *** steps access</div>
+            <div>with *** in basement</div>
+            <div>with *** upstairs</div>
+            <div>not discussed - see further data</div>
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "run on list"> <span>Living Arrangements: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>alone</div>
+            <div>with wife</div>
+            <div>with husband</div>
+            <div>with domestic partner</div>
+            <div>with a parent</div>
+            <div>with both parents</div>
+            <div>with extended family</div>
+            <div>with a friend</div>
+            <div>with friends</div>
+            <div>with girlfriend</div>
+            <div>with boyfriend</div>
+            <div>with fiancee</div>
+            <div>with ex</div>
+            <div>with roommates</div>
+            <div style = "font-weight: bold">with</div>
+            <div style = "font-weight: bold">and</div>
+            <div>a son</div>
+            <div>a daughter</div>
+            <div>a child</div>
+            <div>*** sons</div>
+            <div>*** daughters</div>
+            <div>*** children</div>
+            <div>a grandson</div>
+            <div>a granddaughter</div>
+            <div>a grandchild</div>
+            <div>*** *** grandsons</div>
+            <div>*** granddaughters</div>
+            <div>*** grandchildren</div>
+            <div>an adult son</div>
+            <div>an adult daughter</div>
+            <div>an adult child</div>
+            <div>*** adult sons</div>
+            <div>*** adult daughters</div>
+            <div>*** adult children</div>
+            <div>@his@ father</div>
+            <div>@his@ father-in-law</div>
+            <div>@his@ mother</div>
+            <div>@his@ mother-in-law</div>
+            <div>a grandfather</div>
+            <div>a grandmother</div>
+            <div>grandparents</div>
+            <div>not discussed - see further data</div>
+          </div>
+          <h3 class = "preview" data-format = "sentences"> <span>Caregiver Support: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "simple list"> <span>Equipment Available: 
+            </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>treadmill at home</div>
+            <div>stationary bike at home</div>
+            <div>elliptical at home</div>
+            <div>yoga ball at home</div>
+            <div>P90X (DVD package) at home</div>
+            <div>Insanity (DVD package) at home</div>
+            <div>yoga (DVD package) at home</div>
+			<div>AirCast</div>
+            <div>ASO</div>
+            <div>CAM walking boot</div>
+            <div>knee sleeve</div>
+            <div>knee brace</div>
+            <div>back support</div>
+            <div>back brace</div>
+            <div>neck support</div>
+            <div>neck brace</div>
+            <div>cane</div>
+            <div>tripod cane</div>
+            <div>quad cane</div>
+            <div>crutches</div>
+            <div>lofstrand crutches</div>
+            <div>walker</div>
+            <div>parambulating swivel rolling walker</div>
+            <div>manual wheelchair</div>
+            <div>hemi wheelchair</div>
+            <div>power wheelchair</div>
+            <div>power scooter</div>
+            <div>access to gym</div>
+            <div>***</div>
+            <div>***</div>
+            <div>***</div>			
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span class = "ninecats">Prior 
+            Level of Function: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>Independent - No problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "simple list"> <span>ADLs: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>was independent</div>
+                <div>remains independent</div>
+                <div>needed *** assist</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>IADLs: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>was independent</div>
+                <div>remains independent</div>
+                <div>needed *** assist</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Work: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>retired</div>
+                <div>unemployed</div>
+                <div>worked</div>
+                <div>worked full-time</div>
+                <div>worked part-time</div>
+                <div>with no restrictions</div>
+                <div>with *** restrictions</div>
+                <div>continues working full-time</div>
+                <div>continues working part-time</div>
+                <div>now working part-time</div>
+                <div>with no restrictions</div>
+                <div>with *** restrictions</div>
+                <div>currently looking for a job</div>
+                <div>currently seeking permanent disability status</div>
+                <div>permanently disabled</div>
+                <div>not discussed - see further data</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Leisure: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div class = "default">***e enjoys ***</div>
+                <div>not discussed - see further data</div>
+                <div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"> <span class = "ninecats">Medical/Surgical 
+            History: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>otherwise healthy</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Current: 
+                </span><span></span></h3>
+              <div class = "section preview">
+			  	<div class = "default">***</div>
+			  	<div>***</div>
+			  	<div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Past: </span><span></span></h3>
+              <div class = "section preview">
+			  	<div class = "default">***</div>
+			  	<div>***</div>
+			  	<div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Medications: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div class = "default">***</div>
+			  	<div>***</div>
+			  	<div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Arousal, 
+            Attention, Cognition: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>alert and oriented x 3</div>
+            <div>no problems noted</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"><span class = "ninecats">Cardiopulmonary: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>BP: *** HR: ***</div>
+            <div>SpO2: ***</div>
+            <div>no problems noted</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Integumentary 
+            / Anthropometric Characteristics: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "simple list"> <span>Observation: 
+                </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div>estimated body mass index (BMI) is ***</div>
+                <div>pitting edema ***</div>
+                <div>girth at mid-patella ***</div>
+                <div>ankle figure 8 ***</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Palpation: 
+                </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div>*** is tender to palpation ***</div>
+                <div>tenderness to palpation noted ***</div>
+                <div>(+) jump sign ***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "simple list"> <span>Posture: 
+                </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div>forward head posture</div>
+                <div>exaggerated thoracic kyphosis</div>
+                <div>exaggerated lumbar lordosis</div>
+                <div>anterior pelvic tilt</div>
+                <div>scoliosis with trunk shift/lean to *** and rib hump ***</div>
+                <div>genu varus ***</div>
+                <div>genu valgus ***</div>
+                <div>pes planus ***</div>
+                <div>pes cavus ***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Range 
+            of Motion and Joint Integrity: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Range of 
+                Motion: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div>***</div>
+                <div>no problems noted</div>
+                <div class = "accordion"> 
+                  <h3 class = "preview" data-format = "sentences"> <span>Upper 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Lower 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                </div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Muscle Length: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+                <div>no problems noted</div>
+                <div>90-90 Test (hamstrings length): *** degrees R, *** degrees 
+                  L (normal 70 degrees or greater)</div>
+                <div>prone knee bending (quads length): *** inches R, *** inches 
+                  L (normal 0")</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Tests of 
+                Provocation: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div class = "accordion"> 
+                  <h3 class = "preview" data-format = "sentences"> <span>Cervical 
+                    Spine: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Shoulder: 
+                    </span><span></span></h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Elbow: 
+                    </span><span></span></h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Wrist/Hand: 
+                    </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Lumbar 
+                    Spine: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div class = "accordion"> 
+                      <h3 class = "preview" data-format = "run on list"> <span>Quadrant 
+                        Test: </span><span></span></h3>
+                      <div class = "section preview"> 
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                        <div style = "font-weight: bold">;</div>
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                      </div>
+                      <h3 class = "preview" data-format = "simple list"> <span>Slump 
+                        Test: </span><span></span></h3>
+                      <div class = "section preview"> 
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                        <div style = "font-weight: bold">;</div>
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                      </div>
+                      <h3 class = "preview" data-format = "simple list"> <span>Seated 
+                        Straight Leg Test: </span><span></span></h3>
+                      <div class = "section preview"> 
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                        <div style = "font-weight: bold">;</div>
+                        <div>positive</div>
+                        <div>negative</div>
+                        <div>right</div>
+                        <div>greater than</div>
+                        <div>left</div>
+                        <div>greater than</div>
+                        <div>right</div>
+                        <div>right and left</div>
+                      </div>
+                    </div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Hip: 
+                    </span><span></span></h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Knee: 
+                    </span><span></span></h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Foot/Ankle: 
+                    </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Muscle 
+            Performance: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Strength: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+                <div>no problems noted</div>
+                <div>5 out of 5, throughout</div>
+                <div>except ***</div>
+                <div>*** r/l deficits > 10% (isometrically) as shown below</div>
+                <div>*** l/r deficits > 10% (isometrically) as shown below</div>
+                <div class = "accordion"> 
+                  <h3 class = "preview" data-format = "sentences"> <span>Upper 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>no problems noted</div>
+                    <div>5 out of 5, throughout</div>
+                    <div>except ***</div>
+                    <div>*** r/l deficits > 10% (isometrically) as shown below</div>
+                    <div>*** l/r deficits > 10% (isometrically) as shown below</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Lower 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>no problems noted</div>
+                    <div>5 out of 5, throughout</div>
+                    <div>except ***</div>
+                    <div>*** r/l deficits > 10% (isometrically) as shown below</div>
+                    <div>*** l/r deficits > 10% (isometrically) as shown below</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Sensation, 
+            Reflexes, and Nerve Integrity: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>intact</div>
+            <div>no problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Light Touch 
+                Sensation: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div>***</div>
+                <div>intact</div>
+                <div>no problems noted</div>
+                <div class = "accordion"> 
+                  <h3 class = "preview" data-format = "sentences"> <span>Upper 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>intact</div>
+                    <div>no problems noted</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Lower 
+                    Quarter: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>intact</div>
+                    <div>no problems noted</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Neuromotor 
+            Function / Development: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no athetosis, tremor, rigidity, or dystonia </div>
+            <div>no problems noted</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Balance, 
+            Locomotion, and Gait: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no problems noted</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Balance: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>Romberg Test ***</div>
+                <div>eyes open ***</div>
+                <div>eyes open and eyes closed</div>
+                <div>Single limb stance ***</div>
+                <div>***</div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "run on list"> <span>Gait: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+                <div>no problems noted</div>
+                <div>gait is</div>
+                <div>normal</div>
+                <div>brisk</div>
+                <div>symmetric</div>
+                <div>antalgic</div>
+                <div>right leaning</div>
+                <div>left leaning</div>
+                <div>forward leaning at the waist</div>
+                <div>with</div>
+                <div>decreased step length left and stance time right</div>
+                <div>decreased step length right and stance time left</div>
+                <div>ataxia</div>
+                <div>festinence</div>
+                <div>foot drop</div>
+                <div>using no ambulator assistive device</div>
+                <div>using a rolling walker</div>
+                <div>using a cane</div>
+                <div>using a quad can</div>
+                " 
+                <div>using a walker</div>
+                <div>using a swivel rolling walker</div>
+                <div>self-selected walking speed (SSWS)</div>
+                <div>antalgic (decreased left stance time and decreased right 
+                  step length)</div>
+                <div>antalgic (decreased right stance time and decreased left 
+                  step length)</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Stairs: </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Transfers: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Wheelchair: 
+                </span><span></span></h3>
+              <div class = "section preview"> 
+                <div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Self-Care, 
+            Home Management, Work, and Leisure: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>***</div>
+            <div>no problems noted</div>
+            <div>***</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Functional 
+                Outcomes: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div class = "default">***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview" data-format = "sentences"><span>Informed Consent: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">*** consented to today's physical therapy evaluation. 
+              *** agrees to and understands the physical therapy treatment plan 
+              and goals</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span class = "ninecats">Interventions 
+            completed today: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>evaluation only</div>
+            <div class = "default">evaluation along with the intervention(s) below</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "sentences"> <span>Total treatment 
+                time: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div class = "default">*** minutes</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Timed Code 
+                Treatment: </span><span></span> </h3>
+              <div class = "section preview"> 
+                <div class = "default">*** minutes</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Interventions 
+                included: </span><span></span> </h3>
+              <div> 
+                <div class = "accordion"> 
+                  <h3 class = "preview" data-format = "sentences"> <span>Therapeutic 
+                    Exercise: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Gait 
+                    Training: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Manual 
+                    Therapy: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Neuromuscular 
+                    Reeducation: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Self-care 
+                    / Home management: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Therapeutic 
+                    Activity: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Therapeutic 
+                    Group: </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Modalities: 
+                    </span><span></span> </h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                  <h3 class = "preview" data-format = "sentences"> <span>Other: 
+                    </span><span></span></h3>
+                  <div class = "section preview"> 
+                    <div>***</div>
+                    <div>***</div>
+                    <div>***</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview" data-format = "simple list"><span>Patient/Family 
+            Education: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>R.I.C.E.</div>
+            <div>sensible exercise and activity progression</div>
+            <div>postural ideals (how and why important)</div>
+            <div>applied body mechanics instruction as it related to ***</div>
+            <div>break up sedentary 'activity' 2-3 times per hour (as recommended 
+              by NIOSH)</div>
+			<div>***</div>
+			<div>***</div>
+			<div>***</div>
+			<div>***</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "sentences"><span>Team 
+            communication: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">This initial note contains the examination 
+              findings and physical therapy findings, goals, assessment, and plan 
+              of care that will be of interest to the referring provider and others 
+              involved in the patient's care</div>
+			<div>***</div>
+			<div>***</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class = "accordion"> 
+      <h3 class = "preview soap" data-format = "run on list"> <span class = "bold soap">Assessment: 
+        </span><span></span> </h3>
+      <div class = "section preview">
+		<div class = "default">*** presents to physical therapy</div>
+		<div class = "default">with a *** history of ***</div>
+	  	<!--
+		<div class = "default">that affects ***.</div>
+		<div class = "default">*** is appropriate for PT services to address ***</div>
+		<div class = "default">and work toward achieving the goals agreed to below.</div>
+		<div class = "default">*** barriers to progress in PT evident at this 
+		  time***.</div>
+		<div class = "default">H*** prognosis to achieve the goals below is ***.</div>
+		<div>***</div>
+		<div>***</div>
+		-->
+        <div class = "accordion">
+          <h3 class = "preview" data-format = "run on list"> <span>Impression: 
+            </span><span></span></h3>
+          <div class = "section preview">  
+			<div class = "default">*** presents to physical therapy</div>
+			<div class = "default">with a *** history of ***</div>
+			<div class = "default">that affects ***.</div>
+			<div class = "default">*** is appropriate for PT services to address ***</div>
+			<div class = "default">and work toward achieving the goals agreed to below.</div>
+			<div class = "default">*** barriers to progress in PT evident at this 
+			  time***.</div>
+			<div class = "default">H*** prognosis to achieve the goals below is ***.</div>
+			<div>***</div>
+			<div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "run on list"> <span>In light of: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div data-full = "increased exercise tolerance,">(+) exercise</div>
+            <div data-full = "increased activity tolerance at home,">(+) home</div>
+            <div data-full = "increased activity tolerance on the job,">(+) work</div>
+            <div data-full = "decreased in activity-related pain level,">(+) pain</div>
+            <div data-full = "ability to sleep more comfortably/soundly through the night,">(+) sleep</div>
+            <div data-full = "there is reason to believe PT intervention is helping address the patient's problem at this point in time.">(+) PT a benefit</div>
+            <div data-full = "exercise tolerance lower than expected,">(-) exercise</div>
+            <div data-full = "ongoing and significant activity limitations at home,">(-) home</div>
+            <div data-full = "ongoing and significant activity limitations on the job,">(-) work</div>
+            <div data-full = "little or no reduction in activity-related pain level,">(-) pain - static</div>
+            <div data-full = "a reported worsenening in activity-related pain level,">(-) pain - worsened</div>
+            <div data-full = "ongoing difficulty sleeping comfortably/soundly through the night,">(-) sleep - static</div>
+            <div data-full = "a reported worsening in sleeping comfort,">(-) sleep - worsened</div>
+            <div data-full = "there is little reason to believe PT intervention is helping resolve the problem at this point in time. ">(-) PT NO benefit</div>
+            <div data-full = "My expectation is that *** represents an acute but temporary setback, and that working toward PT goals can continue, advisedly.">(-) A: acute/temporary</div>
+			<div>***</div>
+			<div>***</div>
+			<div>***</div>
+          </div>
+          <h3 class = "preview" data-format = "run on list"> <span>Complexity: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "accordion"> 
+              <h3 class = "omit"> <span>Personal Factors and/or Co-morbidities: 
+                </span><span></span></h3>
+              <div class = "section omit"> 
+                <div>He has</div>
+                <div>She has</div>
+                <div>no personal factors and/or co-morbidities apt to affect or 
+                  complicate the PT problem that I can see.</div>
+                <div>1 or 2 personal factors and/or co-morbidities apt to affect 
+                  or complicate the PT problem, specifically</div>
+                <div>more than 2 personal factors and/or co-morbidities apt to 
+                  affect or complicate the PT problem, including</div>
+                <div>stress/anxiety related to ***, </div>
+                <div>obesity, </div>
+                <div>smoking, </div>
+                <div>alcohol use or abuse, </div>
+                <div>chronic pain, </div>
+                <div>a neurologic condition (***), </div>
+                <div>a cardiovascular condition (***), </div>
+                <div>a pulmonary condition (***), </div>
+                <div>a musculoskeletal condition (***), </div>
+                <div>evidence of rotator cuff fraying/tendinosis, </div>
+                <div>financial stress, </div>
+                <div>anxiety, </div>
+                <div>chronic pain, </div>
+                <div>fever, </div>
+                <div>fatigue, </div>
+                <div>weight loss, </div>
+                <div>weight gain, </div>
+                <div>frequent colds, </div>
+                <div>night sweats, </div>
+                <div>loss of appetite, </div>
+                <div>difficulty sleeping, </div>
+                <div>arthritis, </div>
+                <div>asthma, </div>
+                <div>cancer, </div>
+                <div>CHF, </div>
+                <div>COPD, </div>
+                <div>coronary artery disease, </div>
+                <div>DM, </div>
+                <div>HTN, </div>
+                <div>digestive/intestinal problems, </div>
+                <div>psychiatric problems, </div>
+                <div>stroke, </div>
+                <div>thyroid disease, </div>
+                <div>colon polyp, </div>
+                <div>GERD (gastroesophageal reflux disease), </div>
+                <div>wears glasses, </div>
+                <div>hearing loss, </div>
+                <div>sinus problem, </div>
+                <div>broken bones, </div>
+                <div>gout, </div>
+                <div>joint pain, </div>
+                <div>joint swelling, </div>
+                <div>numbness, </div>
+                <div>generalized headaches, </div>
+                <div>sleep apnea, </div>
+                <div>s/p total knee replacement, </div>
+                <div>AAA, </div>
+                <div>cerebral aneurysm, </div>
+                <div>MS, </div>
+                <div>muscular dystrophy, </div>
+                <div>cerebropalsy, </div>
+                <div>Down's Syndrome, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div data-full = ".">[PERIOD]</div>
+              </div>
+              <h3 class = "omit"> <span>Examination Findings: </span><span></span></h3>
+              <div class = "section omit"> 
+                <div>He has</div>
+                <div>She has</div>
+                <div>1 or 2 examination findings with the potential to affect 
+                  the PT problem, specifically</div>
+                <div>3 examination findings with the potential to affect the PT 
+                  problem, specifically</div>
+                <div>4 or more examination findings with the potential to affect 
+                  the PT problem, including</div>
+                <div>pain with ***, </div>
+                <div>jump sign, </div>
+                <div>postural faults, </div>
+                <div>decreased active range of motion, </div>
+                <div>decreased passive range of motion, </div>
+                <div>decreased strength, </div>
+                <div>postural faults, </div>
+                <div>antalgic gait with decreased stance time right and decreased 
+                  step length left, </div>
+                <div>antalgic gait with decreased stance time left and decreased 
+                  step length right, </div>
+                <div>positive ***, </div>
+                <div>positive ***, </div>
+                <div>positive ***, </div>
+                <div>below expectations/norms on the ***, </div>
+                <div>below expectations/norms on the ***, </div>
+                <div>below expectations/norms on the ***, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div>***, </div>
+                <div data-full = ".">[PERIOD]</div>
+              </div>
+              <h3 class = "omit"> <span>Clinical Presentation: </span><span></span></h3>
+              <div class = "section omit"> 
+                <div>His clinical presentation is</div>
+                <div>Her clinical presentation is</div>
+                <div>stable and uncomplicated.</div>
+                <div>evolving, with changing characteristics.</div>
+                <div>unstable and unpredictable.</div>
+              </div>
+              <h3 class = "omit"> <span>Complexity: </span><span></span></h3>
+              <div class = "section omit"> 
+                <div>The complexity of the PT evaluation, with these factors taken 
+                  into account, is</div>
+                <div>low.</div>
+                <div>moderate.</div>
+                <div>high.</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview" data-format = "run on list"> <span>G Codes: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "accordion"> 
+              <h3 class = "omit"> <span>Current: </span><span></span></h3>
+              <div class = "section omit"> 
+                <div class = "accordion"> 
+                  <h3 class = "omit"> <span>Category: </span><span></span></h3>
+                  <div class = "section omit"> 
+                    <div class = "default">Currently, in the category of</div>
+                    <div>'mobility' [G8978]</div>
+                    <div>'self-care' [G8987]</div>
+                    <div>'carry/handle objects' [G8984]</div>
+                    <div>'maintain body position' [G8981]</div>
+                    <div>'other PT primary' [G8990]</div>
+                  </div>
+                  <h3 class = "omit"> <span>Impairment Level: </span><span></span></h3>
+                  <div class = "section omit"> 
+                    <div class = "default">the impairment level is</div>
+                    <div>0% [CH]</div>
+                    <div>1% to &lt; 20% [CI]</div>
+                    <div>21% to &lt; 40% [CJ]</div>
+                    <div>41% to &lt; 60% [CK]</div>
+                    <div>61% to &lt; 80% [CL]</div>
+                    <div>81% to &lt; 100% [CM]</div>
+                    <div>100% [CN]</div>
+                  </div>
+                  <h3 class = "omit"> <span>Considering: </span><span></span></h3>
+                  <div class = "section omit"> 
+                    <div class = "default">, considering ***</div>
+                    <div>***</div>
+                    <div>***</div>
+                    <div>d***</div>
+                    <div>***</div>
+                  </div>
+                </div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "omit"> <span>Goal: </span><span></span></h3>
+              <div class = "section omit"> 
+                <div class = "accordion"> 
+                  <h3 class = "omit"> <span>Category: </span><span></span></h3>
+                  <div class = "section omit"> 
+                    <div class = "default">The PT goal, in the category of</div>
+                    <div>'mobility' [G8979]</div>
+                    <div>'self-care' [G8988]</div>
+                    <div>'carry/handle objects' [G8985]</div>
+                    <div>'maintain body position' [G8982]</div>
+                    <div>'other PT primary' [G8991]</div>
+                    <div>'subsequent other PT' [G8994]</div>
+                  </div>
+                  <h3 class = "omit"> <span>Impairment Level: </span><span></span></h3>
+                  <div class = "section omit"> 
+                    <div class = "default">is</div>
+                    <div>0% [CH]</div>
+                    <div>1% to &lt; 20% [CI]</div>
+                    <div>21% to &lt; 40% [CJ]</div>
+                    <div>41% to &lt; 60% [CK]</div>
+                    <div>61% to &lt; 80% [CL]</div>
+                    <div>81% to &lt; 100% [CM]</div>
+                    <div>100% [CN]</div>
+                  </div>
+                </div>
+                <div>***</div>
+                <div>***</div>
+              </div>
+              <h3 class = "preview" data-format = "sentences"> <span>Discharge: 
+                </span><span></span></h3>
+              <div class = "section omit"> 
+                <div>***</div>
+                <div>***</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span class = "ninecats">Short 
+            Term Goals: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>by 1 week</div>
+            <div>by 2 weeks</div>
+            <div>by 3 weeks</div>
+            <div class = "default">by 4 weeks</div>
+            <div>by 6 weeks</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "simple list"> <span class = "bold"></span><span></span></h3>
+              <div class = "section preview"> 
+                <div data-full = "Independent with a preliminary home exercise program">I 
+                  (prelim) HEPG</div>
+                <div data-full = "Pain rating with provocative movements or activities - maximum &lt;= ***/10">Pain 
+                  (max)</div>
+                <div data-full = "Postural correction is performed with minimal verbal cueing">Posture</div>
+                <div data-full = "Able to state the 4 key principles of applied body mechanics">ABMI</div>
+                <div data-full = "Able to articulate one or more strategies for managing ***">Strategies</div>
+                <div data-full = "The patient's score on the Quick DASH has improved from *** to ***, with 9-16 points indicating the minimum clinically important difference (the lower the score, the better).">Gain 
+                  in QuickDASH</div>
+                <div data-full = "The patient's score on the Lower Extremity Functional Scale has improved from ***/80 to ***/80, with 9 points indicating the minimum clinically important difference (the higher the score, the better).">Gain 
+                  in LEFS</div>
+                <div data-full = "The patient's score on the Oswestry Disability Questionnaire has improved from *** to ***, with 4-14 points indicating the minimum clinically important difference (the lower the score, the better).">Gain 
+                  in OSW</div>
+                <div data-full = "The patient's score on the Neck Disability Index has improved from *** to ***, with 7 points indicating the minimum clinically important difference (the lower the score, the better).">Gain 
+                  in NDI</div>
+              </div>
+            </div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span class = "ninecats">Long 
+            Term Goals: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>by 2 week</div>
+            <div>by 4 weeks</div>
+            <div>by 6 weeks</div>
+            <div class = "default">by 8 weeks</div>
+            <div>by 12 weeks</div>
+            <div class = "accordion"> 
+              <h3 class = "preview" data-format = "simple list"> <span class = "bold"></span><span></span></h3>
+              <div class = "section preview"> 
+                <div data-full = "Independent managing and progression the home exercise program">Final 
+                  HEPG (I)</div>
+                <div data-full = "Pain managed to patient satisfaction">Pain satisfied</div>
+                <div data-full = "Postural correction is performed spontaneously throughout the day">Posture 
+                  (I)</div>
+                <div data-full = "Able to demonstrate the 4 key principles of applied body mechanics with little or no cueing in mock functional activities in PT">BMI 
+                  (I)</div>
+                <div data-full = "Implementing one or more  effective strategies for managing *** as needed">Strategies 
+                  (I)</div>
+                <div data-full = "Achieve maximal improvement on the Quick DASH">Max 
+                  QuickDASH</div>
+                <div data-full = "Achieve maximal improvement on the Lower Extremity Functional Scale (LEFS)">Max 
+                  LEFS</div>
+                <div data-full = "Achieve maximal improvement on the Modified Low Back Pain Disability Questionnaire">Max 
+                  MLBPDQ</div>
+                <div data-full = "Achieve maximal improvement on the Neck Disability Index">Max 
+                  NDI</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class = "accordion"> 
+      <h3 class = "preview soap" data-format = "sentences"> <span class = "bold soap">Plan: 
+        </span><span></span></h3>
+      <div class = "section preview"> 
+        <div class = "accordion"> 
+          <h3 class = "preview ninecats" data-format = "simple list"> <span>Intensity: 
+            </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>up to 3 times per week</div>
+            <div class = "default">up to 2 times per week</div>
+            <div>&lt;= 1 time per week</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "min per session"> <span>Duration: 
+            </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>30</div>
+            <div>45</div>
+            <div class = "default">60</div>
+            <div>75</div>
+            <div>90</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span>Interventions 
+            may include: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">therapeutic exercise</div>
+            <div class = "default">gait training</div>
+            <div class = "default">manual therapy</div>
+            <div class = "default">neuromuscular reeducation</div>
+            <div class = "default">self-care / home management</div>
+            <div>orthotic fitting / training</div>
+            <div>community work / training</div>
+            <div>canalith repositioning</div>
+            <div>therapeutic group</div>
+            <div>therapeutic activities</div>
+            <div>orthotic checkout</div>
+            <div>mechanical traction</div>
+            <div>estim (TENS) attended</div>
+            <div>estim unattended</div>
+            <div>iontophoresis</div>
+            <div>ultrasound</div>
+            <div>biofeedback training</div>
+            <div>modalities as a contingency if pain remains too acute for the 
+              preceding interventions</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span>Further 
+            Data: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div>vitals signs</div>
+            <div>upper quarter ROM</div>
+            <div>upper quarter strength</div>
+            <div>lower quarter ROM</div>
+            <div>lower quarter strength</div>
+            <div>tests of provocation</div>
+            <div>***</div>
+            <div>serial functional outcome measures</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "simple list"> <span>Patient/family 
+            education: </span><span></span> </h3>
+          <div class = "section preview"> 
+            <div>R.I.C.E.</div>
+            <div class = "default">sensible exercise and activity progression</div>
+            <div>postural ideals (how and why important)</div>
+            <div>applied body mechanics instruction as it related to ***</div>
+            <div>break up sedentary 'activity' 2-3 times per hour (as recommended 
+              by NIOSH)</div>
+          </div>
+          <h3 class = "preview ninecats" data-format = "run on list"> <span>Discharge 
+            Plan: </span><span></span></h3>
+          <div class = "section preview"> 
+            <div class = "default">When goals met or progress plateaus; anticipate</div>
+            <div>2 weeks</div>
+            <div>4 weeks</div>
+            <div>6 weeks</div>
+            <div class = "default">8 weeks</div>
+            <div>12 weeks</div>
+            <div>16 weeks</div>
+            <div>24 weeks</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id = "preview_of_note">Note Preview!</div>
+  <div id = "myfancybox"> 
+    <form>
+      <fieldset>
+      <legend>Fill In / Edit...</legend>
+      <label>The basic...</label>
+      <br />
+      <textarea rows = "8" cols = "30"></textarea>
+      <br />
+      <label>The (hidden) longer version...</label>
+      <br />
+      <textarea rows = "8" cols = "30"></textarea>
+      </fieldset>
+      <fieldset>
+      <label id = "for_cool_checkbox" for = "cool_checkbox">Cool?</label>
+      <input name = "cool_checkbox" id = "cool_checkbox" type = "checkbox" />
+	  <span>&lt;&nbsp;&lt;&nbsp;&lt;&nbsp;&lt;&nbsp;&lt;&nbsp;&lt;</span><br />
+      <button>Update/Close</button>
+      </fieldset>
+    </form>
+  </div>
+  <div id = "map_the_DOM_in_JSON"> </div>
+  
+  <div id = "load_patient"> 
+  	<form>
+		<fieldset>
+			<legend>
+				Patient...
+			</legend>
+			<table>
+				<tbody>
+					<tr>
+						<td>
+							<label for = "load_patient_first">First name:</label>
+						</td>
+						<td>
+							<input type = "text" id = "load_patient_first" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for = "load_patient_last">Last name:</label>
+						</td>
+						<td>
+							<input type = "text" id = "load_patient_last" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for = "load_patient_date">Date:</label>
+						</td>
+						<td>
+							<input type = "text" id = "load_patient_date" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for = "load_patient_date">DOB:</label>
+						</td>
+						<td>
+							<input type = "text" id = "load_patient_dob" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for = "load_patient_referrer">Referred by:</label>
+						</td>
+						<td>
+							<input type = "" id = "load_patient_referrer" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for = "load_patient_referral_date">Referral Date:</label>
+						</td>
+						<td>
+							<input type = "" id = "load_patient_referral_date" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan = "2">
+							<button id = "load_patient_OK">OK</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</fieldset>
+	</form>
+  </div>
+  <div id = "hep_json">
+  </div>
+  <div id = "please_wait">
+    <div> 
+      <!-- WORKS IN MSIE BUT NOT FIREFOX, FOR REASONS I CANNOT FATHOM -->
+      <span>Loading... You <em>may</em> need to 'Allow blocked content'</span><br />
+      <img width = "32" height = "32" src="../loading.gif" alt="loading" /> </div>
+  </div>
+  <div id="colophon"> <span id="build_report"></span> <a id="xhtml_validator" href="http://validator.w3.org/check?uri=referer" title="Valid XHTML 1.0"> 
+    <img src="http://www.vtpaddlers.net/dom_assets/images/icons/valid-xhtml10.png" alt="Valid XHTML 1.0" height="31" width="88" style="border: 0; float:right;" /> 
+    </a> <a id="css_validator" href="http://jigsaw.w3.org/css-validator/validator?uri=http://theralink.com/apps/qe2017/quick_eval_2018.html"> 
+    <img src="http://www.vtpaddlers.net/dom_assets/images/icons/vcss.gif" alt="Valid CSS" height="31" width="88" style="border: 0; float:right;" /> 
+    </a> 
+    <div id="site_info"> 
+      <!--<a id="link_checker" href="http://validator.w3.org/checklink?uri=http://vtpaddlers.net%2Findex.php?id=1">Link Checker</a><br />-->
+      © 2017 <a id="site_info_link" href="mailto:boatful@comcast.net">Tony Shaw</a></div>
+    <a id="contact_us_link" href="mailto:boatful@comcast.net?subject=Quick_Eval">Suggestions 
+    / Report a Bug</a> </div>
+</div>
+</body>
+</html>
