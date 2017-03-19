@@ -1,0 +1,367 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <HTA:APPLICATION 
+     ID="objITHelpdesk"
+     APPLICATIONNAME="New HTA Applet"
+	 BORDER="thin"
+	 CONTEXTMENU="yes"
+	 ICON="torch.ico" 
+	 MAXIMIZEBUTTON="yes"
+     MINIMIZEBUTTON="yes"
+	 RESIZE="no"
+	 SCROLL="yes"
+     SINGLEINSTANCE="no"
+     WINDOWSTATE="maximize" />
+	 
+<!--METADATA NAME="Microsoft ActiveX Data Objects 2.5 Library" TYPE="TypeLib" UUID="{00000205-0000-0010-8000-00AA006D2EA4}"--> 
+<!--WHAT APPARENTLY WORKS FOR *.asp FAILS FOR *.hta -->
+<!--SEE: https://msdn.microsoft.com/en-us/library/ms524771(v=vs.90).aspx -->
+
+<meta http-equiv="x-ua-compatible" content="ie=9">
+<!-- NOW CSS3 COMPATIBLE -->
+
+<style type = "text/css">
+body * {
+	font-family: "arial";
+	font-size: "12pt !important";
+}
+dt {
+	margin: 1em 0;
+}
+pre {
+	font-family: "arial";
+}
+dl>dd pre {
+	color: red; /* #014421; */
+}
+</style>
+
+
+<script type = "text/javascript" src="jquery/jquery-1.7.2.min.js"></script>
+<script type = "text/javascript" src="jquery/ui/jquery-ui.js"></script>
+<link rel="stylesheet" href="jquery/ui/jquery-ui.css" />
+<script type="text/javascript" src="jquery/fancybox/source/jquery.fancybox.pack.js?v=2.1.6"></script>
+<link rel="stylesheet" href="jquery/fancybox/source/jquery.fancybox.css?v=2.1.6" type="text/css" media="screen" />
+<script language="vbscript" type="text/vbscript" src="mylib/vbscript/constants.vbs"></script>
+<script language="vbscript" type="text/vbscript" src="mylib/vbscript/connect.vbs"></script>
+<script language="vbscript" type="text/vbscript" src="mylib/vbscript/query.vbs"></script>
+<script language="vbscript" type="text/vbscript">
+	Public objADObackend : Public objADOActiveDirectory		
+</script>
+<script language="javascript" type="text/javascript">
+	$(document).ready(function(){
+		// vbsLOGIN();
+		// alert(vbsHELLO_WORLD());
+		// vbsCONNECT_DB(6,"help4.accdb");
+		// vbsDISCONNECT_DB();
+	});
+</script>
+</head>
+<body>
+	<div>
+		Hello World!
+	</div>
+	<div>
+		There are several good online resources that - together - spell out VBScript "best practice" and how to leverage the OLEDB/ADODB Connection, Command object, and Recordset object so that a MS Access database can provide a data store for any HTA applet. Here are a couple of very useful links and code snippets:
+	</div>
+	<dl>
+		<dt>
+			<a target = "_blank" href = "https://msdn.microsoft.com/en-us/library/aa227499(v=vs.60).aspx">Programming with VBScript - MSDN</a> 
+		</dt>
+		<dd>
+			<a target = "_blank" href = "">Following Data Type Rules</a><br />
+			<a target = "_blank" href = "">Using VBScript Statements</a><br />
+			<a target = "_blank" href = "">Using VBScript Functions</a><br />
+			<a target = "_blank" href = "">Using VBScript Objects</a>
+		</dd>
+		<dt>
+			<a target = "_blank" href = "https://msdn.microsoft.com/library/ms950396.aspx">Scripting - MSDN</a> 
+		</dt>
+		<dd>
+			All things VBScript... such as (optionally) declaring variables with Dim... Public... or Private...
+		</dd>
+		<dt>
+			<a target = "_blank" href = "https://msdn.microsoft.com/en-us/library/ee251804(v=bts.10).aspx">ADO and FSO Defined Constants List</a><br />
+			https://msdn.microsoft.com/en-us/library/ee251804(v=bts.10).aspx
+		</dt>
+		<dd>
+			If using .asp, the following line in your global.asa file leverages the ADO constants, as described on <a href = "http://stackoverflow.com/questions/5145607/asp-3-0-declare-ado-constants-w-out-including-adovbs-inc">Stack Overflow</a><br />http://stackoverflow.com/questions/5145607/asp-3-0-declare-ado-constants-w-out-including-adovbs-inc. This seems to be irrelevant/ignored in a *.hta page.
+			<pre> 
+&lt;!-- METADATA
+	NAME="Microsoft ActiveX Data Objects 2.5 Library"
+	TYPE="TypeLib" 
+	FILE="C:/Program Files/Common Files/System/ado/msado25.tlb"
+	UUID="00000205-0000-0010-8000-00AA006D2EA4"
+--&gt;
+&lt;!--WHAT APPARENTLY WORKS FOR *.asp SO FAR FAILS FOR TONY'S *.hta --&gt;
+
+The other option is to explicit define the constants that you want/need to use, 
+which we've ended up doing in a file named constants.vbs. Some examples:
+	
+	' CommandTypeEnum. See: <a href = "https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/commandtypeenum">https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/commandtypeenum</a>
+	Const adCmdText = 1
+	Const adCmdTable = 2
+	Const adCmdStoredProc = 4
+	' ADO Data Types. See: <a href = "https://www.w3schools.com/asp/ado_datatypes.asp">https://www.w3schools.com/asp/ado_datatypes.asp</a> (A LONG-ISH LIST)
+	Const adVarChar = 200
+	Const adDate = 7
+	Const adInteger = 3
+	Const adDouble = 5
+	Const adBSTR = 8 ' SEE: <a href = "http://stackoverflow.com/a/14743078/5863730">http://stackoverflow.com/a/14743078/5863730</a>
+		
+	Const adParamInput = 1
+	
+	' ExecuteOptionEnum. See: <a href = "http://www.xtramania.com/Documentation/ADOxtra/Reference/Enums/ExecuteOptionEnum/">http://www.xtramania.com/Documentation/ADOxtra/Reference/Enums/ExecuteOptionEnum/</a>
+	Const adAsyncExecute = 16
+	Const adAsyncFetch = 32
+	Const adAsyncFetchNonBlocking = 64
+	Const adExecuteNoRecords = 128
+	Const adExecuteRecord = 2048	
+	
+	' CursorTypeEnum. See: <a href = "https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/cursortypeenum">https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/cursortypeenum</a>
+	Const adOpenForwardOnly = 0
+	Const adOpenDynamic = 2
+	Const adOpenKeyset = 1
+	Const adOpenStatic = 3
+	
+	' CursorLocationEnum. See: <a href = "https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/cursorlocationenum">https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/cursorlocationenum</a>
+	Const adUseServer = 2
+	Const adUseNone = 1
+	Const adUseClient = 3
+	
+	' LockTypeEnum. See: <a href = "https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/locktypeenum">https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/locktypeenum</a>
+	Const adLockPessimistic = 2
+	Const adLockReadOnly = 1 ' DEFAULT
+	Const adLockOptimistic = 3
+	Const adLockBatchOptimistic = 4
+	</pre>
+		</dd>
+		
+		<dt>
+			<a target = "_blank" href = "https://www.599cd.com/tips/hta/?key=">COMPUTER LEARNING ZONE: HTA Tips</a><br />https://www.599cd.com/tips/hta/?key=
+		</dt>
+		<dd>
+			12 excellent/clear lessons/examples for HTA... Author = Alex Hedley, Owner = Richard Rost
+		</dd>
+		
+		<dt>
+			<a target = "_blank" href = "https://www.599cd.com/tips/hta/advanced/tabulardatacontrol/">COMPUTER LEARNING ZONE: Tabular Data Control</a><br />https://www.599cd.com/tips/hta/advanced/tabulardatacontrol/
+		</dt>
+		<dd>
+			We borrowed from author Alex Hedley and expanded on it, here: <a href = "mylib/sample code/TabularDataControl.hta">Tony's Tabular Data Control in Action</a> (./mylib/sample code/TabularDataControl.hta). But beware, in MSIE 11 it's DEPRECATED! See also: <a href = "http://www.javascriptkit.com/javatutors/tdcfilter.shtml">Filtering a Tabular Data Control - Advanced</a> (http://www.javascriptkit.com/javatutors/tdcfilter.shtml)
+		</dd>
+		
+				
+		<dt>
+			<a target = "_blank" href = "https://www.599cd.com/tips/hta/advanced/accessdb/">ACCESS LEARNING ZONE: Advanced - Connect to an Access Database</a><br />https://www.599cd.com/tips/hta/advanced/accessdb/
+		</dt>
+		<dd>
+			This is a straight-forward overview of key concepts from HTA... Author = Alex Hedley, Owner = Richard Rost
+		</dd>
+		
+		<dt>
+			<a target = "_blank" href = "https://support.microsoft.com/EN-US/help/232144">INFO: Jet OLE DB Provider Version 4.0 (and later) Supports SELECT @@Identity</a><br />https://support.microsoft.com/EN-US/help/232144
+		</dt>
+		<dd>
+Thanks to this newly added functionality, you can see the newly added auto-increment values in your client-side ActiveX Data Objects (ADO) recordsets in ADO 2.1 and later. When you submit the new row to the Jet provider by calling Update or UpdateBatch (depending on your choice of LockType), the ADO cursor engine generates an INSERT INTO query to create the new row in the table. If the recordset contains an auto-increment field, ADO will also generate a SELECT @@Identity query to retrieve the value generated for that auto-increment field. Note: This feature works only with Microsoft Jet OLEDB 4.0 databases. The earlier versions of Microsoft Jet OLEDB do not support this feature. The following code demonstrates this feature:
+			<pre>
+Dim cnDatabase As ADODB.Connection
+Dim rsNewAutoIncrement As ADODB.Recordset
+Dim strConn As String
+Dim strSQL As String
+Dim strPathToMDB As String
+
+strPathToMDB = "C:\NewJet4.MDB"
+strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" & _
+           "Data Source=" & strPathToMDB & ";"
+Set cnDatabase = New ADODB.Connection
+    cnDatabase.Open strConn
+    
+    strSQL = "CREATE TABLE AutoIncrementTest " & _
+             "(ID int identity, Description varchar(40), " & _
+             "CONSTRAINT AutoIncrementTest_PrimaryKey PRIMARY KEY (ID))"
+    cnDatabase.Execute strSQL, , adCmdText + adExecuteNoRecords
+    
+    strSQL = "INSERT INTO AutoIncrementTest " & _
+             "(Description) VALUES ('AutoIncrement Test')"
+    cnDatabase.Execute strSQL, , adCmdText + adExecuteNoRecords
+    
+    strSQL = "SELECT @@Identity"
+    Set rsNewAutoIncrement = New ADODB.Recordset
+    rsNewAutoIncrement.Open strSQL, cnDatabase, adOpenForwardOnly, _
+                            adLockReadOnly, adCmdText
+    MsgBox "New Auto-increment value is: " & rsNewAutoIncrement(0).Value
+
+    rsNewAutoIncrement.Close
+    Set rsNewAutoIncrement = Nothing
+    strSQL = "DROP TABLE AutoIncrementTest"
+    cnDatabase.Execute strSQL, , adCmdText + adExecuteNoRecords
+    cnDatabase.Close
+Set cnDatabase = Nothing
+			</pre>
+		</dd>
+		<dt>
+			<a target = "_blank" href = "https://msdn.microsoft.com/en-us/library/ms524771(v=vs.90).aspx#Improving%20Queries%20with%20the%20Command%20Object">Improving Queries with the Command Object</a><br />https://msdn.microsoft.com/en-us/library/ms524771(v=vs.90).aspx#Improving%20Queries%20with%20the%20Command%20Object
+		</dt>
+		<dd>
+			THIS ENTIRE DOCUMENT IS VERY THOROUGH AND WELL WRITTEN. EVERYTHING YOU WANTED TO KNOW ABOUT ADODB...
+			<pre>
+'Open a connection using Connection object. Notice that the Command object
+'does not have an Open method for establishing a connection.
+strConnectionString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Data\Inventory.mdb"
+Set cnn = Server.CreateObject("ADODB.Connection")
+cnn.Open strConnectionString
+
+'Instantiate Command object; use ActiveConnection property to attach
+'connection to Command object.
+Set cmn= Server.CreateObject("ADODB.Command")
+Set cmn.ActiveConnection = cnn
+
+'Define SQL query.
+cmn.CommandText = "INSERT INTO Inventory (Material, Quantity) VALUES (?, ?)"
+
+'Save a prepared (or pre-compiled) version of the query specified in CommandText
+'property before a Command object's first execution.
+cmn.Prepared = True
+
+'Define query parameter configuration information.
+cmn.Parameters.Append cmn.CreateParameter("material_type",adVarChar, ,255 )
+cmn.Parameters.Append cmn.CreateParameter("quantity",adVarChar, ,255 )
+
+'Define and execute first insert.
+cmn("material_type") = "light bulbs"
+
+cmn("quantity") = "40"
+cmn.Execute ,,adCmdText + adExecuteNoRecords
+
+'Define and execute second insert.
+
+cmn("material_type") = "fuses"
+cmn("quantity") = "600"
+cmn.Execute ,,adCmdText + adExecuteNoRecords
+			</pre>
+		</dd>
+		<dt>
+			<a target = "_blank" href = "http://stackoverflow.com/a/11412084">So, you want to leverage stored queries in your MS Access database, do you??</a><br />http://stackoverflow.com/a/11412084
+		</dt>
+		<dd>
+			Code snippet:
+			<pre>
+'You could set a library reference to 
+'Microsoft ActiveX Data Objects x.x Library
+Dim cmd As Object
+Dim cn As Object
+
+Set cmd = CreateObject("ADODB.Command")
+Set cn = CreateObject("ADODB.Connection")
+
+'Connection string, see also http://connectionstrings.com
+strCon = "Provider=Microsoft.ACE.OLEDB.12.0; " & _
+"Data Source=z:\docs\test.accdb"
+
+cn.Open strCon
+
+'Name of the saved query
+cmd.CommandText = "UpdateDates"
+cmd.CommandType = adCmdStoredProc
+cmd.ActiveConnection = cn
+
+'Some parameters.
+'http://www.w3schools.com/ADO/met_comm_createparameter.asp
+'Make sure you get the type right, you will find details here:
+'http://www.w3schools.com/ADO/ado_datatypes.asp
+'You will find direction here:
+'http://www.w3schools.com/ado/prop_para_direction.asp
+
+'Make sure you get the order right
+'adDate = 7, adInteger = 3, adParamInput = 1
+cmd.Parameters.Append cmd.CreateParameter("@Date1", 7, 1, , txtDate1)
+cmd.Parameters.Append cmd.CreateParameter("@Date2", 7, 1, , txtDate2)
+cmd.Parameters.Append cmd.CreateParameter("@Date2", 3, 1, , MyUniqueKey)
+
+'recs : return for records affected
+'adExecuteNoRecords = 128 : no records are returned by this query, 
+'so this increases efficiency
+'http://www.w3schools.com/ADO/ado_ref_command.asp
+
+cmd.Execute recs,,128
+
+'Did it work?
+MsgBox "Records updated: " & recs 
+			</pre>
+		</dd>
+		<dt>
+			CONNECT_DB() and DISCONNECT_DB() Functions
+		</dt>
+		<dd>
+			<pre>
+	dim objADObackend
+	Function CONNECT_DB()
+		Err.Clear()
+		On Error Resume Next
+		If ( NOT isObject(objADObackend) OR uCase(typeName(objADObackend)) = "NOTHING" ) Then
+			Const cDSN = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="
+			Const cMDBB = "backend.mdb" ' THIS FAILS IF YOU CREATE A LINK TO THE APPLICATION IN AN OUTLOOK EMAIL
+			// ONE WAY OR ANOTHER IT NEEDS TO BE HARD-CODED!!!
+			// MY SOLUTION: DEFINE IT IN ITS OWN INCLUDE FILE, constants.vbs
+			Set objADObackend = CreateObject("ADODB.Connection")
+			objADObackend.Mode = adModeReadWrite
+			' MsgBox cDSN & cMDBB
+			objADObackend.Open(cDSN & cMDBB)
+			
+			If objADObackend.Properties("Jet OLEDB:Engine Type").Value = 5 Then
+				MsgBox "Jet 4.0 database"
+			Else
+				MsgBox "Not a Jet 4.0 database"
+			End If
+						
+		End If
+		CONNECT_DB = true
+		If ( Err.number <> 0 ) Then 
+			MsgBox "Unable to Connect to DB..." & Err.description
+			CONNECT_DB = false
+		End If
+	End Function
+	
+	Function DISCONNECT_DB()
+		On Error Resume Next
+		If (isObject(objADObackend) and uCase(typeName(objADObackend)) = "CONNECTION") Then
+			objADObackend.Close
+			Set objADObackend = Nothing
+		End If    
+		If ( Err.number <> 0 ) Then 
+			MsgBox "Unable to Disconnect from the DB... " & Err.description
+			DISCONNECT_DB = false
+			Exit Function
+		End If
+		DISCONNECT_DB = true
+	End Function
+		
+		
+			</pre>
+		</dd>
+		<dt>
+			<a target = "_blank" href = "http://stackoverflow.com/a/17604793/5863730">CSS3 support for HTA</a><br />http://stackoverflow.com/a/17604793/5863730
+		</dt>
+		<dd>
+			To summarize, you have to include such kind of meta line in your HTA to make it support CSS3:
+			<pre>
+&lt;meta http-equiv="x-ua-compatible" content="ie=9"&gt;
+			</pre>
+
+		</dd>
+		<dt>
+			<a href = "#" onclick = "return false;">link</a><br />#
+		</dt>
+		<dd>
+			
+		</dd>
+		
+		
+		
+		
+
+	</dl>
+</body>
+</html>

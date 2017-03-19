@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+ <HTA:APPLICATION 
+     ID="objITHelpdesk"
+     APPLICATIONNAME="New HTA Applet"
+	 BORDER="thin"
+	 CONTEXTMENU="yes"
+	 ICON="torch.ico" 
+	 MAXIMIZEBUTTON="yes"
+     MINIMIZEBUTTON="yes"
+	 RESIZE="no"
+	 SCROLL="yes"
+     SINGLEINSTANCE="no"
+     WINDOWSTATE="maximize" />
+	 
+<meta http-equiv="x-ua-compatible" content="ie=9">
+<!-- NOW CSS3 COMPATIBLE??? WORKS AT HOME BUT NOT SEEMINGLY AT WORK... -->
+
+<style type = "text/css">
+ol>li:nth-child(2){
+	color: red; /* CSS3 TEST */
+}
+</style>
+
+<script language="vbscript" type="text/vbscript">
+	dim objADObackend
+	Const adCmdTable = 2
+	Const adCmdStoredProc = 4
+	Const adVarChar = 200
+	Const adParamInput = 1
+	Const adExecuteNoRecords = 128
+	Const adCmdText = 1
+	'adDate = 7, adInteger = 3, adParamInput = 1
+	
+	Function HELLO_WORLD()
+		HELLO_WORLD = "Hello World!"
+	End Function
+	
+	Function DISCONNECT_DB()
+		Err.Clear()
+		On Error Resume Next
+		If (isObject(objADObackend) and uCase(typeName(objADObackend)) = "CONNECTION") Then
+			intEngineType = objADObackend.Properties("Jet OLEDB:Engine Type").Value
+			objADObackend.Close
+			Set objADObackend = Nothing
+			DISCONNECT_DB =  "Provider/type: " & intEngineType & " connection closed."
+			Exit Function
+		End If
+		If ( Err.number <> 0 ) Then 
+			DISCONNECT_DB =  "Unable to disconnect from the DB... " ' & Err.description
+			Exit Function
+		End If
+		DISCONNECT_DB = "Uh oh! No error, but apparently unable to close the connection."
+	End Function	
+	
+	Function CONNECT_DB()
+		Err.Clear()
+		' On Error Resume Next
+		If ( NOT isObject(objADObackend) OR uCase(typeName(objADObackend)) = "NOTHING" ) Then
+			dim blnJET: dim strDSN : dim strDBN
+			blnJET = False
+			
+			If Not blnJET Then
+				strDSN = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source="
+				strDBN = "frontend.accdb"
+			Else
+				strDSN = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="
+				strDBN = "backend.mdb"
+			End If
+			
+			Set objADObackend = CreateObject("ADODB.Connection")
+			objADObackend.Mode = adModeReadWrite
+			objADObackend.Open(strDSN & strDBN)
+			MsgBox objADObackend.Properties("Jet OLEDB:Engine Type").Value
+			Select Case True
+				Case objADObackend.Properties("Jet OLEDB:Engine Type").Value = 5
+					CONNECT_DB = "Microsoft.Jet.OLEDB.4.0 provider. Connection established."
+					Exit Function
+				Case objADObackend.Properties("Jet OLEDB:Engine Type").Value = 6
+					CONNECT_DB = "ACE.OLEDB.12.0 provider. Connection established."
+					Exit Function
+				Case Else
+					CONNECT_DB = "UNKNOWN provider. Connection established."
+					Exit Function
+			End Select
+		Else
+			CONNECT_DB = "objADObackend appears to already be open..."
+		End If
+	End Function
+	
+	Function QUERY_DB
+		'Make sure you get the order right
+		Set cmd = CreateObject("ADODB.Command")
+		'Name of the saved query
+		cmd.CommandText = "qryInsertUser"
+		cmd.CommandType = adCmdStoredProc
+		cmd.ActiveConnection = objADObackend
+		cmd.Parameters.Append cmd.CreateParameter("lastname", adVarChar, ,255, "Shaw")
+		cmd.Parameters.Append cmd.CreateParameter("firstname", adVarChar, ,255, "Rosie")
+		cmd.Execute recs,,128
+		Set cmd = Nothing
+		'Did it work?
+		MsgBox "Records updated: " & recs 
+		
+		Set cmd = CreateObject("ADODB.Command")
+		'Name of the saved query
+		cmd.CommandText = "SELECT @@IDENTITY"
+		cmd.CommandType = adCmdText
+		cmd.ActiveConnection = objADObackend
+		Set rsLastInsertID = cmd.Execute
+		MsgBox rsLastInsertID.Fields(0).value
+		Set rsLastInsertID = Nothing
+		Set cmd = Nothing
+			
+		Set cmd = CreateObject("ADODB.Command")
+		'Name of the saved query
+		cmd.CommandText = "qryUsersAZ"
+		cmd.CommandType = adCmdStoredProc
+		cmd.ActiveConnection = objADObackend
+		Set rsUsersAZ = cmd.Execute
+		Set cmd = Nothing
+		Do While Not rsUsersAZ.EOF ' POPULATE div#hello_users_AZ
+			document.getElementById("hello_users_AZ").innerHTML = document.getElementById("hello_users_AZ").innerHTML & rsUsersAZ("user_id") & " | " & rsUsersAZ("user_last") & ", " & rsUsersAZ("user_first") & "<br />"
+			rsUsersAZ.MoveNext
+		Loop
+		
+	End Function
+</script>
+
+</head>
+<body>
+	<ol>
+		<li>Bullet #1
+		</li>
+		<li>Bullet #2 - Red via CSS3???
+		</li>
+		<li>Bullet #3
+		</li>
+	</ol>
+	<div id = "hello_world"></div>
+	<div id = "hello_connection"></div>
+	<div id = "hello_users_AZ"></div>
+	<div id = "hello_disconnected"></div>
+</body>
+</html>
+<script language="javascript" type="text/javascript">
+	document.getElementById("hello_world").innerHTML = HELLO_WORLD();
+	document.getElementById("hello_connection").innerHTML = CONNECT_DB();
+	QUERY_DB();
+	document.getElementById("hello_disconnected").innerHTML = DISCONNECT_DB();
+</script>		
