@@ -36,7 +36,7 @@ var cool_formats = {
 	}
 }
 
-var strGreen = "008000";
+var strGreen = "#008000";
 var objPersonal = {}
 
 function patient_data_handling() {
@@ -195,7 +195,9 @@ $.fn.toggleMe = function(){
 	this.parents("div.section").each(function() {
 		var strColor = "red";
 		if($(this).find("div[class~='cool']").length > 0) strColor = strGreen;
+		// alert(strColor);
 		$(this).prev("h3").css("color",strColor);
+		$(this).prev("h3").children("span").last().css("color",strColor);
 	});
 	// RE: THE TARGET div.section AND ITS PRECEDING h3,
 	// THE TEXT WE WANT TO WRITE WILL GO HERE: .prev("h3").children("span").last()

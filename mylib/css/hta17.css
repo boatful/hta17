@@ -30,14 +30,14 @@ div#tools  {
 	height:2em;
 	color:#ffffff;
 	background-color: #000000;
-    position: absolute;
+    position: absolute; /* WITH CSS3 ENABLED, THESE 3 LINES ELIMINATE THE NEED FOR AN IE6 HACK */
     left: 0px;
     top: 0px;
 	z-index:55;
 }
 
 * html div#tools  {
-    position: absolute;
+    /* position: absolute; */ /* IE6 HACK */
 }
 /* END OF IE6 HACK */
 
@@ -87,8 +87,8 @@ div#editor div.accordion, div#editor div.accordion h3 {
 }
 div#editor div.accordion > div { /* WE DOUBT IE6 UNDERSTANDS THIS... */
 	position: relative;
-	/* width: 61px; */
-	height: 450px;
+	/* width: 61px; IF WE ENABLE CSS3 USING <meta http-equiv="x-ua-compatible" content="ie=9">, THEN COMMENT OUT THESE TWO LINES */
+	/* height: 450px; */
 }
 td.ninecats {
 	text-decoration: underline;
