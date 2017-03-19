@@ -164,6 +164,15 @@ $.fn.fancyDetails = function() {
 	return false;
 }
 
+$.fn.beCool = function(e) {
+	e = e || window.event;
+	if(e.keyCode == 9) {
+		// alert("tab pressed...");
+	} else {
+		this.addClass("cool");
+	}
+}
+
 $.fn.autoCorrect = function() {
 	// SEE auto_correct.js WHICH CONTAINS > 550 HEP REPLACEMENT TEXTS
 	// AND 350+ MORE NON-HEP REPLACEMENT TEXTS
@@ -355,7 +364,7 @@ $(document).ready(function(){
 				.on("click",function(){$(this).toggleMe();})
 				.on("blur",function(){$(this).blurMe();})
 				.on("contextmenu",function( event ) {$(this).fancyDetails();return false;})
-				.on("keyup",function(){$(this).autoCorrect();})
+				.on("keyup",function( event ){$(this).autoCorrect();$(this).beCool(event);})
 				.attr("contenteditable","true");
 			$(this).parent().next("div.section").first().children("div.normal").last().after(newCoolDiv);
 			newCoolDiv.trigger("click").focus();
@@ -375,7 +384,7 @@ $(document).ready(function(){
 				.on("click",function(){$(this).toggleMe();})
 				.on("blur",function(){$(this).blurMe();})
 				.on("contextmenu",function( event ) {$(this).fancyDetails();return false;})
-				.on("keyup",function(){$(this).autoCorrect();})
+				.on("keyup",function( event ){$(this).autoCorrect();$(this).beCool(event);})
 				.attr("contenteditable","true");
 			$(this).parent().next("div.section").first().prepend(newCoolDiv);
 			newCoolDiv.trigger("click").focus();
@@ -389,8 +398,9 @@ $(document).ready(function(){
 		$(this).blurMe();
 	}).on("click",function(){
 		$(this).toggleMe();
-	}).on("keyup",function(){
+	}).on("keyup",function( event ){
 		$(this).autoCorrect();
+		$(this).beCool(event);
 	}).on("contextmenu",function( event ) {
 		$(this).fancyDetails();
 		return false;
@@ -608,7 +618,7 @@ $(document).ready(function(){
 					.on("click",function(){$(this).toggleMe();})
 					.on("blur",function(){$(this).blurMe();})
 					.on("contextmenu",function( event ) {$(this).fancyDetails();return false;})
-					.on("keyup",function(){$(this).autoCorrect();})
+					.on("keyup",function( event ){$(this).autoCorrect();$(this).beCool(event);})
 					.attr("contenteditable","true")
 			);
 		}
