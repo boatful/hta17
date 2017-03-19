@@ -594,7 +594,6 @@ $(document).ready(function(){
 	});
 
 	$.fancybox($("div#load_patient"));
-	$("div#load_patient").find("input").first().focus();
 	
 	// ALL ACCORDIONS ARE FULLY COLLAPSED, ON STARTUP
 	// BY VIRTUE OF THE SETTING: {"active":false}
@@ -632,7 +631,7 @@ $(document).ready(function(){
 	$("div#editor").css({'display':'block'});
 	$("div#please_wait").css({'display':'none'});
 	
-	var today = new Date().getYear(); // NO NEED TO ADD 1900 IN HTA/IE6
+	var today = new Date().getYear() + 1900; // NO NEED TO ADD 1900 IN HTA/IE6
 	today += "-";
 	m = new Date().getMonth()+1;
 	today += (m < 10) ? ("0" + m) : m;
@@ -641,7 +640,8 @@ $(document).ready(function(){
 	today += (d < 10) ? ("0" + d) : d;
 	$("input#load_patient_date").val(today);
 	$("input#load_patient_referral_date").val(today);
-	$("button#load_patient_OK").focus();
+	// $("button#load_patient_OK").focus();
+	$("input#load_patient_first").focus();
 	// alert(CONNECT_DB());
 	// CONNECT_DB()
 	// QUERY_DB();

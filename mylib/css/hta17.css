@@ -171,9 +171,10 @@ div.fineprint {
 }
 div#load_patient {
 	display: none;
-	background-color: 4FBCAA;
+	width: 440px;
+	background-color: #4FBCAA;
 }
-div#load_patient, div#load_patient fieldset.loader { /* ONE TABLE INSIDE EACH OF 2 FIELDSETS, LAST I CHECKED. MAKE THEIR APPEARANCE CONSISTENT */
+div#load_patient fieldset.loader { /* ONE TABLE INSIDE EACH OF 2 FIELDSETS, LAST I CHECKED. MAKE THEIR APPEARANCE CONSISTENT */
 	width: 400px;
 }
 div#load_patient td {
