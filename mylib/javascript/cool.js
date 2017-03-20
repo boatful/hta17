@@ -631,7 +631,7 @@ $(document).ready(function(){
 	$("div#editor").css({'display':'block'});
 	$("div#please_wait").css({'display':'none'});
 	
-	var today = new Date().getYear() + 1900; // NO NEED TO ADD 1900 IN HTA/IE6
+	var today = new Date().getFullYear(); // NO NEED TO ADD 1900 IF YOU USE: getFullYear();
 	today += "-";
 	m = new Date().getMonth()+1;
 	today += (m < 10) ? ("0" + m) : m;
